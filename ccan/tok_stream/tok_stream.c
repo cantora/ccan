@@ -23,7 +23,8 @@ static int add_val(const struct tok_stream *ts, char **base, size_t *len) {
 	size_t offset, val_len;
 	char *tmp;
 
-	val_len = tok_itr_val_len(&ts->itr); 
+	/* add one for the null byte */
+	val_len = tok_itr_val_len(&ts->itr) + 1;
 	if(*base == NULL) {
 		offset = 0;
 		*base = malloc(sizeof(char) * val_len);
@@ -31,7 +32,7 @@ static int add_val(const struct tok_stream *ts, char **base, size_t *len) {
 			return -1;
 	}
 	else {
-		/* subtract 1 from new len b.c. we will 
+		/* subtract 1 from new len b.c. we will
 		 * overwrite the null byte that terminates base. */
 		offset = *len - 1;
 
@@ -55,14 +56,14 @@ int tok_stream(struct tok_stream *ts, char **token) {
 
 	/* if this is true then this is the last
 	 * token AND its a partial token (not empty),
-	 * so we return NULL and save this partial 
+	 * so we return NULL and save this partial
 	 * token in ts->partial_tok */
 	if(tok_itr_partial_val(&ts->itr) ) {
 		if(add_val(ts, &ts->partial_tok, &ts->partial_tok_len) != 0)
 			return -2;
 
 		return -1;
-	} 
+	}
 
 	if(ts->partial_tok != NULL) {
 		*token = ts->partial_tok;
