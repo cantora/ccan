@@ -60,14 +60,6 @@ struct tok_itr {
 void tok_itr_init(struct tok_itr *itr, const char *tokens, char delim);
 
 /**
- * tok_itr_delim - returns the token delimiter
- * @itr: a pointer to a tok_itr struct
- */
-static inline char tok_itr_delim(const struct tok_itr *itr) {
-	return itr->delim;
-}
-
-/**
  * tok_itr_end - checks whether iterator has finished
  * @itr: a pointer to a tok_itr struct
  *
