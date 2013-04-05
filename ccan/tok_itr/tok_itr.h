@@ -60,6 +60,14 @@ struct tok_itr {
 void tok_itr_init(struct tok_itr *itr, const char *tokens, char delim);
 
 /**
+ * tok_itr_delim - returns the token delimiter
+ * @itr: a pointer to a tok_itr struct
+ */
+static inline char tok_itr_delim(const struct tok_itr *itr) {
+	return itr->delim;
+}
+
+/**
  * tok_itr_end - checks whether iterator has finished
  * @itr: a pointer to a tok_itr struct
  *
@@ -108,12 +116,13 @@ static inline bool tok_itr_partial_val(const struct tok_itr *itr) {
  * @itr: a pointer to a tok_itr struct.
  *
  * This function returns the length of the current token
- * value in bytes. After tok_itr_end has returned true, 
- * the value returned by this function will be the length
+ * value in bytes plus one for a null byte that will be 
+ * need to terminate the token. After tok_itr_end has returned true, 
+ * the value returned by this function will be the length plus one
  * of the last token found in the token string.
  */
 static inline size_t tok_itr_val_len(const struct tok_itr *itr) {
-	return itr->len;
+	return itr->len + 1;
 }
 
 /**
