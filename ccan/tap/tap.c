@@ -43,6 +43,11 @@ static const char *todo_msg_fixed = "libtap malloc issue";
 static int todo = 0;
 static int test_died = 0;
 static int test_pid;
+static FILE *output = NULL;
+static FILE *err_output = NULL;
+
+#define TAP_OUTPUT (output == NULL? stdout : output)
+#define TAP_ERR_OUTPUT (err_output == NULL? stderr : err_output)
 
 /* Encapsulate the pthread code in a conditional.  In the absence of
    libpthread the code does nothing.
@@ -65,16 +70,16 @@ static void
 _expected_tests(unsigned int tests)
 {
 
-	printf("1..%d\n", tests);
+	fprintf(TAP_OUTPUT, "1..%d\n", tests);
 	e_tests = tests;
 }
 
 static void
 diagv(const char *fmt, va_list ap)
 {
-	fputs("# ", stdout);
-	vfprintf(stdout, fmt, ap);
-	fputs("\n", stdout);
+	fputs("# ", TAP_OUTPUT);
+	vfprintf(TAP_OUTPUT, fmt, ap);
+	fputs("\n", TAP_OUTPUT);
 }
 
 static void
@@ -135,27 +140,27 @@ _gen_result(int ok, const char *func, const char *file, unsigned int line,
 	}
 
 	if(!ok) {
-		printf("not ");
+		fprintf(TAP_OUTPUT, "not ");
 		failures++;
 	}
 
-	printf("ok %d", test_count);
+	fprintf(TAP_OUTPUT, "ok %d", test_count);
 
 	if(test_name != NULL) {
-		printf(" - ");
+		fprintf(TAP_OUTPUT, " - ");
 
 		/* Print the test name, escaping any '#' characters it
 		   might contain */
 		if(local_test_name != NULL) {
-			flockfile(stdout);
+			flockfile(TAP_OUTPUT);
 			for(c = local_test_name; *c != '\0'; c++) {
 				if(*c == '#')
-					fputc('\\', stdout);
-				fputc((int)*c, stdout);
+					fputc('\\', TAP_OUTPUT);
+				fputc((int)*c, TAP_OUTPUT);
 			}
-			funlockfile(stdout);
+			funlockfile(TAP_OUTPUT);
 		} else {	/* vasprintf() failed, use a fixed message */
-			printf("%s", todo_msg_fixed);
+			fprintf(TAP_OUTPUT, "%s", todo_msg_fixed);
 		}
 	}
 
@@ -167,12 +172,12 @@ _gen_result(int ok, const char *func, const char *file, unsigned int line,
 	   This is not counted as a failure, so decrement the counter if
 	   the test failed. */
 	if(todo) {
-		printf(" # TODO %s", todo_msg ? todo_msg : todo_msg_fixed);
+		fprintf(TAP_OUTPUT, " # TODO %s", todo_msg ? todo_msg : todo_msg_fixed);
 		if(!ok)
 			failures--;
 	}
 
-	printf("\n");
+	fprintf(TAP_OUTPUT, "\n");
 
 	if(!ok)
 		_diag("    Failed %stest (%s:%s() at line %d)",
@@ -222,7 +227,7 @@ _cleanup(void)
 	/* No plan provided, but now we know how many tests were run, and can
 	   print the header at the end */
 	if(!skip_all && (no_plan || !have_plan)) {
-		printf("1..%d\n", test_count);
+		fprintf(TAP_OUTPUT, "1..%d\n", test_count);
 	}
 
 	if((have_plan && !no_plan) && e_tests < test_count) {
@@ -266,7 +271,7 @@ _tap_init(void)
 		/* stdout needs to be unbuffered so that the output appears
 		   in the same place relative to stderr output as it does
 		   with Test::Harness */
-//		setbuf(stdout, 0);
+//		setbuf(TAP_OUTPUT, 0);
 		run_once = 1;
 	}
 }
@@ -283,7 +288,7 @@ plan_no_plan(void)
 	_tap_init();
 
 	if(have_plan != 0) {
-		fprintf(stderr, "You tried to plan twice!\n");
+		fprintf(TAP_ERR_OUTPUT, "You tried to plan twice!\n");
 		test_died = 1;
 		UNLOCK;
 		exit(255);
@@ -308,12 +313,12 @@ plan_skip_all(const char *reason)
 
 	skip_all = 1;
 
-	printf("1..0");
+	fprintf(TAP_OUTPUT, "1..0");
 
 	if(reason != NULL)
-		printf(" # Skip %s", reason);
+		fprintf(TAP_OUTPUT, " # Skip %s", reason);
 
-	printf("\n");
+	fprintf(TAP_OUTPUT, "\n");
 
 	UNLOCK;
 }
@@ -330,14 +335,14 @@ plan_tests(unsigned int tests)
 	_tap_init();
 
 	if(have_plan != 0) {
-		fprintf(stderr, "You tried to plan twice!\n");
+		fprintf(TAP_ERR_OUTPUT, "You tried to plan twice!\n");
 		test_died = 1;
 		UNLOCK;
 		exit(255);
 	}
 
 	if(tests == 0) {
-		fprintf(stderr, "You said to run 0 tests!  You've got to run something.\n");
+		fprintf(TAP_ERR_OUTPUT, "You said to run 0 tests!  You've got to run something.\n");
 		test_died = 1;
 		UNLOCK;
 		exit(255);
@@ -379,7 +384,7 @@ skip(unsigned int n, const char *fmt, ...)
 
 	while(n-- > 0) {
 		test_count++;
-		printf("ok %d # skip %s\n", test_count,
+		fprintf(TAP_OUTPUT, "ok %d # skip %s\n", test_count,
 		       skip_msg != NULL ?
 		       skip_msg : "libtap():malloc() failed");
 	}
@@ -454,4 +459,20 @@ exit_status(void)
 	if (r > 255)
 		r = 255;
 	return r;
+}
+
+void
+tap_set_output_file(FILE *f)
+{
+	LOCK;
+	output = f;
+	UNLOCK;
+}
+
+void
+tap_set_err_output_file(FILE *f)
+{
+	LOCK;
+	err_output = f;
+	UNLOCK;
 }
