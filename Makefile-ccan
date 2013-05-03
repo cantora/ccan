@@ -89,6 +89,7 @@ MODS_WITH_SRC := antithread \
 	tap \
 	time \
 	timer \
+	tok_itr \
 	ttxml \
 	wwviaudio
 
