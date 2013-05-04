@@ -25,6 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#include <stdio.h>
 #include <ccan/compiler/compiler.h>
 
 /**
@@ -247,5 +248,8 @@ void plan_skip_all(const char *reason);
  * This can be used to ease debugging, or exit on the first failure.
  */
 void (*tap_fail_callback)(void);
+
+void tap_set_output_file(FILE *f);
+void tap_set_err_output_file(FILE *f);
 
 #endif /* CCAN_TAP_H */
