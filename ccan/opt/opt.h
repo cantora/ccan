@@ -21,7 +21,7 @@ struct opt_table;
  *
  * If the @cb returns non-NULL, opt_parse() will stop parsing, use the
  * returned string to form an error message for errlog(), free() the
- * string and return false.
+ * string (or see opt_set_alloc) and return false.
  *
  * Any number of equivalent short or long options can be listed in @names,
  * separated by '|'.  Short options are a single hyphen followed by a single
@@ -60,7 +60,7 @@ struct opt_table;
  *
  * If the @cb returns non-NULL, opt_parse() will stop parsing, use the
  * returned string to form an error message for errlog(), free() the
- * string and return false.
+ * string (or see opt_set_alloc) and return false.
  *
  * See Also:
  *	OPT_WITHOUT_ARG()
@@ -159,7 +159,7 @@ void opt_register_table(const struct opt_table *table, const char *desc);
  *
  * If the @cb returns non-NULL, opt_parse() will stop parsing, use the
  * returned string to form an error message for errlog(), free() the
- * string and return false.
+ * string (or see opt_set_alloc) and return false.
  */
 #define opt_register_noarg(names, cb, arg, desc)			\
 	_opt_register((names), OPT_CB_NOARG((cb), 0, (arg)), (arg), (desc))
@@ -182,7 +182,7 @@ void opt_register_table(const struct opt_table *table, const char *desc);
  *
  * If the @cb returns non-NULL, opt_parse() will stop parsing, use the
  * returned string to form an error message for errlog(), free() the
- * string and return false.
+ * string (or see opt_set_alloc) and return false.
  *
  * Example:
  * static char *explode(const char *optarg, void *unused)
@@ -297,6 +297,19 @@ bool opt_early_parse(int argc, char *argv[],
 void opt_free_table(void);
 
 /**
+ * opt_set_alloc - set alloc/realloc/free function for opt to use.
+ * @allocfn: allocator function
+ * @reallocfn: reallocator function, ptr may be NULL, size never 0.
+ * @freefn: free function
+ *
+ * By default opt uses malloc/realloc/free, and simply crashes if they fail.
+ * You can set your own variants here.
+ */
+void opt_set_alloc(void *(*allocfn)(size_t size),
+		   void *(*reallocfn)(void *ptr, size_t size),
+		   void (*freefn)(void *ptr));
+
+/**
  * opt_log_stderr - print message to stderr.
  * @fmt: printf-style format.
  *
@@ -337,11 +350,25 @@ char *opt_invalid_argument(const char *arg);
  * and a table of all the options with their descriptions.  If an option has
  * description opt_hidden, it is not shown here.
  *
+ * The table of options is formatted such that descriptions are
+ * wrapped on space boundaries.  If a description has a "\n" that is
+ * left intact, and the following characters indented appropriately.
+ * If the description begins with one or more space/tab (or has a
+ * space or tab following a "\n") that line is output without wrapping.
+ *
  * If "extra" is NULL, then the extra information is taken from any
  * registered option which calls opt_usage_and_exit().  This avoids duplicating
  * that string in the common case.
  *
  * The result should be passed to free().
+ *
+ * See Also:
+ *	opt_usage_and_exit()
+ *
+ * Example:
+ *	opt_register_arg("--explode|--boom", explode, NULL, NULL,
+ *			 "This line will be wrapped by opt_usage\n"
+ *			 "  But this won't because it's indented.");
  */
 char *opt_usage(const char *argv0, const char *extra);
 

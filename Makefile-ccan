@@ -8,8 +8,10 @@ CFLAGS += $(CCAN_CFLAGS) -I. $(DEPGEN)
 
 # Modules which are just a header:
 MODS_NO_SRC := alignof \
+	argcheck \
 	array_size \
 	asearch \
+	bitmap \
 	build_assert \
 	bytestring \
 	cast \
@@ -41,6 +43,7 @@ MODS_WITH_SRC := antithread \
 	ciniparser \
 	crc \
 	crcsync \
+	cpuid \
 	daemonize \
 	daemon_with_notify \
 	dgraph \
@@ -49,9 +52,11 @@ MODS_WITH_SRC := antithread \
 	foreach \
 	grab_file \
 	hash \
+	heap \
 	htable \
 	idtree \
 	ilog \
+	io \
 	isaac \
 	iscsi \
 	jmap \
