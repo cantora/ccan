@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "config.h"
 
@@ -30,6 +31,10 @@
  *    tok_idx++;
  *  }
  *
+ *  for(i = 0; i < tok_idx; i++)
+ *    free(tokens[i]);
+ * License: LGPL (v3 or any later version)
+ * Author: anthony cantor <ar.cantor@gmail.com>
  */
 int main(int argc, char *argv[])
 {
